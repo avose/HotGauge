@@ -13,7 +13,7 @@ RUN echo "deb http://dk.archive.ubuntu.com/ubuntu/ `lsb_release -cs` universe" >
 RUN apt-get update
 RUN apt-get install -y gcc-7 bison flex 
 RUN apt-get install -y libblas3 libblas-dev 
-RUN apt-get install -y libpugixml-dev 
+RUN apt-get install -y libpugixml-dev
 
 RUN echo "deb https://build.openmodelica.org/apt `lsb_release -cs` release" | tee /etc/apt/sources.list.d/openmodelica.list
 RUN apt-get install -y python3 python3-dev python3-venv python-is-python3
@@ -24,12 +24,15 @@ RUN for PKG in `apt-cache search "omlib-.*" | cut -d" " -f1`; do apt-get install
 
 RUN rm /bin/sh && ln -s /bin/bash /bin/sh
 
+RUN apt install -y emacs-nox
 RUN apt-get install sudo
 RUN useradd -ms /bin/bash -G sudo hotgauge
 USER hotgauge
 WORKDIR /home/hotgauge/
 
-COPY --chown=hotgauge:hotgauge ./ ./HotGauge
+# !!avose: Don't copy from local dir, clone fresh from repo.
+#COPY --chown=hotgauge:hotgauge ./ ./HotGauge
+RUN git clone 'https://github.com/avose/HotGauge'
 
 WORKDIR /home/hotgauge/HotGauge/
 RUN python -m venv env
@@ -39,11 +42,27 @@ RUN ./get_and_patch_3DICE.sh
 WORKDIR /home/hotgauge/HotGauge/3d-ice/
 RUN ./install-superlu.sh
 RUN make CC=gcc-7
+
+RUN sed -ie 's:parameter String args:parameter String args = "":g' heatsink_plugin/common/HeatsinkBlocks.mo
+RUN sed -ie 's:^$:installPackage(Modelica, "3.2.3", exactMatch=false);:' heatsink_plugin/templates/NonlinearExample/buildfmi.mos
+RUN sed -ie 's:NonlinearExample.NonlinearHeatsink_Interface3DICE:NonlinearHeatsink_Interface3DICE:' heatsink_plugin/templates/NonlinearExample/Makefile
+RUN sed -ie 's:Heatsink.TestHeatsink_Interface3DICE:TestHeatsink_Interface3DICE:' heatsink_plugin/templates/Modelica/Makefile
+RUN sed -ie 's:HS483.HS483_P14752_ConstantFanSpeed_Interface3DICE:HS483_P14752_ConstantFanSpeed_Interface3DICE:' heatsink_plugin/heatsinks/HS483/Makefile
+RUN sed -ie 's:HS483.HS483_P14752_VariableFanSpeed_Interface3DICE:HS483_P14752_VariableFanSpeed_Interface3DICE:' heatsink_plugin/heatsinks/HS483/Makefile
+RUN sed -ie 's:Cuplex.Cuplex21606_ConstantFlowRate_Interface3DICE:Cuplex21606_ConstantFlowRate_Interface3DICE:' heatsink_plugin/heatsinks/cuplex_kryos_21606/Makefile
+RUN sed -ie 's:Cuplex.Cuplex21606_VariableFlowRate_Interface3DICE:Cuplex21606_VariableFlowRate_Interface3DICE:' heatsink_plugin/heatsinks/cuplex_kryos_21606/Makefile
 RUN make plugin CC=gcc-7
-RUN make test CC=gcc-7
+
+RUN ln -s /home/hotgauge/HotGauge/3d-ice/heatsink_plugin/heatsinks/HS483/HS483_P14752_ConstantFanSpeed_Interface3DICE /home/hotgauge/HotGauge/3d-ice/heatsink_plugin/heatsinks/HS483/HS483.HS483_P14752_ConstantFanSpeed_Interface3DICE
+
+RUN sed -ie 's:Test.TestHeatsink_Interface3DICE:TestHeatsink_Interface3DICE:' test/plugin/Makefile
+#RUN make test CC=gcc-7
+
+WORKDIR /home/hotgauge/HotGauge/examples
+RUN source /home/hotgauge/HotGauge/env/bin/activate && python /home/hotgauge/HotGauge/examples/floorplans.py
 
 WORKDIR /home/hotgauge/HotGauge/
-
+RUN echo "source /home/hotgauge/HotGauge/env/bin/activate" >> ~/.bashrc
 USER root
 RUN mkdir /data
 RUN chown hotgauge:hotgauge /data
