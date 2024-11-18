@@ -1,2 +1,2 @@
 #!/bin/sh
-docker run --user hotgauge -it hotgauge
+docker run -v /home/$USER:/home/$USER --user hotgauge -it hotgauge
