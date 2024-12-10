@@ -32,6 +32,7 @@ WORKDIR /home/hotgauge/
 
 # !!avose: Don't copy from local dir, clone fresh from repo.
 #COPY --chown=hotgauge:hotgauge ./ ./HotGauge
+ARG CACHEBUST=1
 RUN git clone 'https://github.com/avose/HotGauge'
 
 WORKDIR /home/hotgauge/HotGauge/
@@ -59,27 +60,7 @@ RUN sed -ie 's:Test.TestHeatsink_Interface3DICE:TestHeatsink_Interface3DICE:' te
 #RUN make test CC=gcc-7
 
 WORKDIR /home/hotgauge/HotGauge/examples
-RUN ./run_simulation.sh
-
-#RUN source /home/hotgauge/HotGauge/env/bin/activate && python floorplans.py
-#RUN ln -s -T /home/hotgauge/HotGauge/3d-ice/heatsink_plugin/heatsinks/HS483/HS483_P14752_ConstantFanSpeed_Interface3DICE HS483_P14752_ConstantFanSpeed_Interface3DICE
-#RUN source /home/hotgauge/HotGauge/env/bin/activate && python only_warmup.py
-#RUN sed -ie 's:HS483\.::g' ./simulation_with_warmup/outputs/warmup/IC.stk
-#RUN sed -ie 's:IC\.flp:/home/hotgauge/HotGauge/examples/simulation_with_warmup/outputs/warmup/IC\.flp:g' ./simulation_with_warmup/outputs/warmup/IC.stk
-#RUN /home/hotgauge/HotGauge/3d-ice/bin/3D-ICE-Emulator /home/hotgauge/HotGauge/examples/simulation_with_warmup/outputs/warmup/IC.stk
-
-#RUN source /home/hotgauge/HotGauge/env/bin/activate && python only_simulation.py
-#RUN sed -ie 's:HS483\.::g' ./simulation_with_warmup/outputs/sim/IC.stk
-#RUN sed -ie 's:IC\.flp:/home/hotgauge/HotGauge/examples/simulation_with_warmup/outputs/sim/IC\.flp:g' ./simulation_with_warmup/outputs/sim/IC.stk
-#RUN sed -ie 's:/home/hotgauge/HotGauge/examples/only_simulation/outputs/warmup/final\.tstack:final\.tstack:g' ./simulation_with_warmup/outputs/sim/IC.stk
-#RUN /home/hotgauge/HotGauge/3d-ice/bin/3D-ICE-Emulator /home/hotgauge/HotGauge/examples/simulation_with_warmup/outputs/sim/IC.stk
-
-#WORKDIR /home/hotgauge/HotGauge/examples/simulation_with_warmup
-#RUN cp ../die_* outputs/sim/
-#RUN source /home/hotgauge/HotGauge/env/bin/activate && ./compute_local_maxima_stats.sh
-#RUN source /home/hotgauge/HotGauge/env/bin/activate && ./plot_vs_time.sh
-#RUN source /home/hotgauge/HotGauge/env/bin/activate && ./visualize_hotspots.sh
-#RUN source /home/hotgauge/HotGauge/env/bin/activate && ./visualize_power.sh
+RUN /home/hotgauge/HotGauge/examples/run_simulation.sh
 
 WORKDIR /home/hotgauge/HotGauge/
 RUN echo "source /home/hotgauge/HotGauge/env/bin/activate" >> ~/.bashrc
