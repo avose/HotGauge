@@ -1,4 +1,5 @@
-#!/usr/bin/env/ bash
+#!/usr/bin/env bash
+set -x
 
 # Set working directory.
 pushd /home/hotgauge/HotGauge/examples
